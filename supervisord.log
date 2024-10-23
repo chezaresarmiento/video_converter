@@ -1,0 +1,11 @@
+2024-10-23 03:31:38,100 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
+2024-10-23 03:31:38,101 WARN For [program:laravel-worker], redirect_stderr=true but stderr_logfile has also been set to a filename, the filename has been ignored
+2024-10-23 03:31:38,105 INFO supervisord started with pid 1
+2024-10-23 03:31:39,110 INFO spawned: 'laravel-worker_00' with pid 7
+2024-10-23 03:31:39,112 INFO spawned: 'php-fpm' with pid 8
+2024-10-23 03:31:40,150 INFO success: laravel-worker_00 entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-23 03:31:40,150 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2024-10-23 03:32:14,305 WARN received SIGQUIT indicating exit request
+2024-10-23 03:32:14,306 INFO waiting for laravel-worker_00, php-fpm to die
+2024-10-23 03:32:14,310 INFO stopped: php-fpm (exit status 0)
+2024-10-23 03:32:15,315 WARN stopped: laravel-worker_00 (terminated by SIGTERM)

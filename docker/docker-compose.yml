@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  nginx:
+    build: #usually we would specify an image name but in this case the nginx service was created with his own dockerfile
+      context: .
+      dockerfile: nginx.dockerfile
+    ports:
+      - 9000:80
+    volumes:
+      - ./../:/var/www/html
+    depends_on:
+      - php
+    networks:
+      - mylocalnetwork
+  mysql:
+      build:
+        context: .
+        dockerfile: mysql.dockerfile
+        args:
+          - MYSQL_VERSION=${MYSQL_VERSION}
+      environment:
+        - MYSQL_DATABASE=${MYSQL_DATABASE}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        - TZ=${WORKSPACE_TIMEZONE}
+      volumes:
+        - ./mysql/var:/var/lib/mysql
+      ports:
+        - "${MYSQL_PORT}:3306"
+      networks:
+        - mylocalnetwork
+  php:
+    build:
+      context: .
+      dockerfile: php.dockerfile
+    volumes:
+      - ./../:/var/www/html
+    networks:
+      - mylocalnetwork
+    depends_on:
+      - mysql
+      - redis
+
+  composer:
+    build:
+      context: .
+      dockerfile: composer.dockerfile
+    volumes:
+      - ./../:/var/www/html
+    working_dir: /var/www/html #bydefault composer will try to run commands inside it's own folder that's why we need to specify the working directory
+  
+  redis:
+    build:
+      context: .
+      dockerfile: redis.dockerfile
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    networks:
+      - mylocalnetwork
+
+networks:
+  mylocalnetwork:
+    driver: bridge
+
+
+
+
