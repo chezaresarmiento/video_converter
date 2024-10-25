@@ -21,4 +21,4 @@ yarn-error.log
 /.vscode
 /.zed
 /docker/mysql
-/suvervisor.log
+suvervisord.log
