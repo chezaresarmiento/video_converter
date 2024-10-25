@@ -22,3 +22,4 @@ yarn-error.log
 /.zed
 /docker/mysql
 **/suvervisord.log
+supervisord.log
