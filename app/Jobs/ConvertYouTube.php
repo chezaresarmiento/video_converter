@@ -65,12 +65,26 @@ class ConvertYouTube implements ShouldQueue
     // Step 2: Define the output file path using the video title
     $outputFile = 'public/converted/' . $videoTitle . '.' . $this->downloadFormat;
 
-    // Step 3: Convert YouTube video to MP3
-    $conversionProcess = new Process([
-        'yt-dlp', '-x', '--audio-format', $this->downloadFormat,
-        '-o', storage_path('app/') . $outputFile,
-        $this->youtubeLink
-    ]);
+    if($this->downloadFormat=='mp3'){
+        // Step 3: Convert YouTube video to MP3
+        $conversionProcess = new Process([
+            'yt-dlp', '-x', '--audio-format', $this->downloadFormat,
+            '-o', storage_path('app/') . $outputFile,
+            $this->youtubeLink
+        ]);
+    }
+
+    if($this->downloadFormat=='mp4'){
+        $conversionProcess = new Process([
+            'yt-dlp', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
+            '--postprocessor-args', '-c:v libx264 -c:a aac', // Ensure video is H.264 and audio is AAC (QuickTime-friendly)
+            '--merge-output-format', 'mp4', // Merge into MP4 format
+            '-o', storage_path('app/') . $outputFile, // Output file location
+            $this->youtubeLink
+        ]);
+    }
+    
+
     $conversionProcess->setTimeout(300); // Set the timeout to 300 seconds
     $conversionProcess->run();
 
