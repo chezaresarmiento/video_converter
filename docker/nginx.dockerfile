@@ -1,4 +1,6 @@
 FROM nginx:stable-alpine
+RUN apk update && apk upgrade
+RUN apt-get install -y net-tools vim bash
 ENV NGINXUSER=laravel
 ENV NGINXGROUP=laravel
 RUN mkdir -p /var/www/html/public
