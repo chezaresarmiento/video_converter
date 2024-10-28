@@ -41,8 +41,8 @@ class ConvertVideo implements ShouldQueue
      */
     public function handle()
 {
-    $inputPath = public_path('source') . '/' . $this->originalVideoName;
-    $outputPath = public_path('converted').'/' . pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat;
+    $inputPath =  '/source/' . $this->originalVideoName;
+    $outputPath = '/converted/' . pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat;
 
     \Log::info('Input Path: ' . $outputPath);
     // Create FFmpeg process
