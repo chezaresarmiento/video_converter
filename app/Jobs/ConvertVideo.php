@@ -56,7 +56,7 @@ class ConvertVideo implements ShouldQueue
     // Check if file exists after conversion
     if (file_exists($outputPath)) {
         // Store information in database and notify user
-        $url =Storage::url($outputPath); // Get public URL for download
+        $url =Storage::url("/converted/".pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat); // Get public URL for download
 
         // Fire the event to notify user of completion
         broadcast(new ConversionCompleted($this->userId, $url));
