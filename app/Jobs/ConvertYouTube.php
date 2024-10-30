@@ -70,7 +70,7 @@ class ConvertYouTube implements ShouldQueue
     if($this->downloadFormat=='mp3'){
         // Step 3: Convert YouTube video to MP3
         $conversionProcess = new Process([
-            "yt-dlp --cookies $path_cookies", '-x', '--audio-format', $this->downloadFormat,
+            "yt-dlp","--cookies",$path_cookies,"-x", '--audio-format', $this->downloadFormat,
             '-o', $outputFile,
             $this->youtubeLink
         ]);
