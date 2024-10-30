@@ -12,6 +12,7 @@ use Symfony\Component\Process\Process;
 use Illuminate\Foundation\Bus\Dispatchable;
 use App\Models\Download;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Illuminate\Support\Facades\Log;
 
 
 class ConvertYouTube implements ShouldQueue
@@ -66,6 +67,8 @@ class ConvertYouTube implements ShouldQueue
     // Step 2: Define the output file path using the video title
     $outputFile = storage_path('app/public/converted').'/' . $videoTitle . '.' . $this->downloadFormat;
     $path_cookies=storage_path().'/cookies.txt';
+
+    Log::info(file_get_contents($path_cookies));
 
     if($this->downloadFormat=='mp3'){
         // Step 3: Convert YouTube video to MP3
