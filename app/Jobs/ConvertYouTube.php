@@ -65,11 +65,12 @@ class ConvertYouTube implements ShouldQueue
 
     // Step 2: Define the output file path using the video title
     $outputFile = storage_path('app/public/converted').'/' . $videoTitle . '.' . $this->downloadFormat;
+    $path_cookies=storage_path().'/cookies.txt';
 
     if($this->downloadFormat=='mp3'){
         // Step 3: Convert YouTube video to MP3
         $conversionProcess = new Process([
-            'yt-dlp', '-x', '--audio-format', $this->downloadFormat,
+            "yt-dlp --cookies $path_cookies", '-x', '--audio-format', $this->downloadFormat,
             '-o', $outputFile,
             $this->youtubeLink
         ]);
