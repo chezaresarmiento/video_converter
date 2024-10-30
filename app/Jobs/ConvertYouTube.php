@@ -58,18 +58,18 @@ class ConvertYouTube implements ShouldQueue
 
     // Sanitize the title (remove any invalid characters for file name)
     $videoTitle = preg_replace('/[^A-Za-z0-9_\-]/', '_', $videoTitle);
-    $videoTitle = substr($videoTitle, 0, 100); // Limit the title to 100 characters
+    $videoTitle = substr($videoTitle, 0, 20); // Limit the title to 100 characters
     //to lower case
     $videoTitle = strtolower($videoTitle);
 
     // Step 2: Define the output file path using the video title
-    $outputFile = 'public/converted/' . $videoTitle . '.' . $this->downloadFormat;
+    $outputFile = storage_path('app/public/converted').'/' . $videoTitle . '.' . $this->downloadFormat;
 
     if($this->downloadFormat=='mp3'){
         // Step 3: Convert YouTube video to MP3
         $conversionProcess = new Process([
             'yt-dlp', '-x', '--audio-format', $this->downloadFormat,
-            '-o', storage_path('app/') . $outputFile,
+            '-o', $outputFile,
             $this->youtubeLink
         ]);
     }
@@ -79,7 +79,7 @@ class ConvertYouTube implements ShouldQueue
             'yt-dlp', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
             '--postprocessor-args', '-c:v libx264 -c:a aac', // Ensure video is H.264 and audio is AAC (QuickTime-friendly)
             '--merge-output-format', 'mp4', // Merge into MP4 format
-            '-o', storage_path('app/') . $outputFile, // Output file location
+            '-o', $outputFile, // Output file location
             $this->youtubeLink
         ]);
     }
@@ -96,7 +96,7 @@ class ConvertYouTube implements ShouldQueue
 
     // Step 4: Notify the user when conversion is done
     if ($conversionProcess->isSuccessful()) {
-        $url = Storage::url($outputFile); // Get the public URL for the converted file
+        $url = Storage::url('converted'.'/'.$videoTitle . '.' . $this->downloadFormat); // Get the public URL for the converted file
         broadcast(new ConversionCompleted($this->userId, $url)); // Fire the event to notify user
         Download::create([
             'user_id' => $this->userId,
