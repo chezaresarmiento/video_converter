@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
 use Illuminate\Foundation\Bus\Dispatchable;
 use App\Models\Download;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 
 class ConvertYouTube implements ShouldQueue
