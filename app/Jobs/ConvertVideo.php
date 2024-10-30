@@ -41,8 +41,8 @@ class ConvertVideo implements ShouldQueue
      */
     public function handle()
 {
-    $inputPath = public_path('source') . '/' . $this->originalVideoName;
-    $outputPath = public_path('converted').'/' . pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat;
+    $inputPath = storage_path('source') . '/' . $this->originalVideoName;
+    $outputPath = storage_path('app/public/converted').'/' . pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat;
 
     \Log::info('Input Path: ' . $outputPath);
     // Create FFmpeg process
@@ -56,7 +56,7 @@ class ConvertVideo implements ShouldQueue
     // Check if file exists after conversion
     if (file_exists($outputPath)) {
         // Store information in database and notify user
-        $url =Storage::url("/converted/".pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat); // Get public URL for download
+        $url =Storage::url("converted/".pathinfo($this->originalVideoName, PATHINFO_FILENAME). '.' . $this->newFormat); // Get public URL for download
 
         // Fire the event to notify user of completion
         broadcast(new ConversionCompleted($this->userId, $url));

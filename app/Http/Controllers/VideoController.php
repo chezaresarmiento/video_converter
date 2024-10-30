@@ -22,10 +22,12 @@ class VideoController extends Controller
         //     'name' => 'required|string'
         // ]);
 
+        
+
         // Get the original video
         $video = $request->file('video');
         $originalVideoName = time() . '_' . $request->name . '.' . $video->getClientOriginalExtension();
-        $video->move(public_path('source'), $originalVideoName);
+        $video->move(storage_path('source'), $originalVideoName);
 
         // Dispatch the job to convert the video
         ConvertVideo::dispatch($originalVideoName, $request->video_format, auth()->id());
