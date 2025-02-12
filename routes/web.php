@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\VideoController;
 use App\Models\Download;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -45,5 +47,19 @@ route::post("/videos/convert", [VideoController::class, 'store'])->name('videos.
 route::post("/videos/download", [VideoController::class, 'download_video'])->name('videos.download');
 
 Route::delete('/videos/{id}', [VideoController::class, 'destroy'])->name('videos.destroy');
+
+Route::get('/extension', function () {
+    return view('extension');
+});
+
+Route::get('/download-extension', function () {
+    $file = public_path('chrome-extension/youtube-cookie-extractor.zip');
+    
+    if (file_exists($file)) {
+        return Response::download($file, 'youtube-cookie-extractor.zip');
+    } else {
+        return abort(404, 'File not found.');
+    }
+});
 
 require __DIR__.'/auth.php';

@@ -123,6 +123,53 @@ function deleteVideo(downloadId) {
   }
 } 
 
+const importCookies = async () => {
+    try {
+        const cookies = await getYoutubeCookies();
+        if (!cookies) {
+            alert("No YouTube cookies found!");
+            return;
+        }
+
+        // Send cookies to Laravel
+        let response = await fetch('/api/upload-cookies', {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ cookies }),
+        });
+
+        let result = await response.json();
+        alert(result.message);
+    } catch (error) {
+        console.error("Error importing cookies:", error);
+    }
+};
+
+// Function to get YouTube cookies in Netscape format
+const getYoutubeCookies = async () => {
+    return new Promise((resolve) => {
+        chrome.cookies.getAll({ domain: "youtube.com" }, (cookies) => {
+            if (!cookies || cookies.length === 0) {
+                resolve(null);
+                return;
+            }
+
+            let netscapeHeader = "# Netscape HTTP Cookie File\n# Automatically generated\n\n";
+            let netscapeCookies = netscapeHeader + cookies.map(cookie => {
+                let domain = cookie.domain.startsWith('.') ? cookie.domain : '.' + cookie.domain;
+                let path = cookie.path || '/';
+                let secure = cookie.secure ? 'TRUE' : 'FALSE';
+                let expiration = cookie.expirationDate ? cookie.expirationDate : '0';
+                return `${domain}\tTRUE\t${path}\t${secure}\t${expiration}\t${cookie.name}\t${cookie.value}`;
+            }).join("\n");
+
+            resolve(netscapeCookies);
+        });
+    });
+};
+
 onMounted(() => {
   
     Echo.channel('conversions')
@@ -132,12 +179,19 @@ onMounted(() => {
             url_download.value = e.url
             window.location.reload()
         });
+    
 });
+
+
+
 </script>
 
 <template>
   
   <div class="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+
+   
+
     
     <div class="max-w-3xl mx-auto">
 
@@ -276,6 +330,13 @@ onMounted(() => {
           <p class="text-gray-500">You haven't downloaded any videos yet.</p>
         </div>
       </section>
+
+      <button 
+        @click="importCookies" 
+        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+      >
+        Import YouTube Cookies
+      </button>
     </div>
   </div>
 </template>

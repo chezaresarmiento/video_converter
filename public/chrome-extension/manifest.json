@@ -1,0 +1,19 @@
+{
+    "manifest_version": 3,
+    "name": "YouTube Cookie Extractor",
+    "version": "1.0",
+    "permissions": [
+        "cookies",
+        "storage",
+        "activeTab"
+    ],
+    "host_permissions": [
+        "https://*.youtube.com/"
+    ],
+    "background": {
+        "service_worker": "backgrounds.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    }
+}
