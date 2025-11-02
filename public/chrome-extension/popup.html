@@ -31,10 +31,17 @@
 </head>
 <body>
 
-    <h2>YouTube Cookies</h2>
-    <textarea id="cookieText" readonly></textarea>
+    <h2>YouTube Cookie Auto-Sync</h2>
+    <div id="status">
+        <p><strong>Status:</strong> <span id="syncStatus">Checking...</span></p>
+        <p><strong>Last Sync:</strong> <span id="lastSync">Never</span></p>
+    </div>
+
+    <h3>Manual Controls</h3>
+    <textarea id="cookieText" readonly placeholder="Cookies will appear here when extracted..."></textarea>
     <button id="extractCookies">Extract Cookies</button>
     <button id="uploadCookies">Upload to Server</button>
+    <button id="forceSyncCookies">Force Auto-Sync Now</button>
 
     <script src="popup.js"></script>
 

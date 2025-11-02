@@ -1,18 +1,27 @@
 {
     "manifest_version": 3,
-    "name": "YouTube Cookie Extractor",
-    "version": "1.0",
+    "name": "YouTube Cookie Auto-Sync",
+    "version": "2.0",
+    "description": "Automatically syncs YouTube cookies for video conversion",
     "permissions": [
         "cookies",
         "storage",
         "activeTab"
     ],
     "host_permissions": [
-        "https://*.youtube.com/"
+        "https://*.youtube.com/",
+        "http://video.appsolution4u.com/"
     ],
     "background": {
         "service_worker": "backgrounds.js"
     },
+    "content_scripts": [
+        {
+            "matches": ["https://*.youtube.com/*"],
+            "js": ["content-script.js"],
+            "run_at": "document_idle"
+        }
+    ],
     "action": {
         "default_popup": "popup.html"
     }
