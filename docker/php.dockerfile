@@ -1,12 +1,25 @@
 FROM php:8.2-fpm-alpine
 
+# Update package list
 RUN apk update && apk upgrade
 
-RUN apk add vim
+# Install basic tools
+RUN apk add --no-cache vim
 
-RUN set -x && apk add --no-cache freetype-dev libjpeg-turbo-dev libpng-dev libzip-dev bzip2-dev oniguruma-dev bash supervisor \
-    && docker-php-ext-configure gd \
-    && docker-php-ext-install gd
+# Install required packages
+RUN apk add --no-cache \
+    freetype-dev \
+    libjpeg-turbo-dev \
+    libpng-dev \
+    libzip-dev \
+    bzip2-dev \
+    oniguruma-dev \
+    bash \
+    supervisor
+
+# Configure and install GD extension
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install gd
 
 SHELL ["/bin/bash", "-c"]
 
