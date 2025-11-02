@@ -160,6 +160,7 @@ class ConvertYouTube implements ShouldQueue
     } else {
         throw new \Exception('Conversion failed: ' . $conversionProcess->getErrorOutput());
     }
+}
 
     /**
      * Extract video ID from YouTube URL
