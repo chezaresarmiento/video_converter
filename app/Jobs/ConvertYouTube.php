@@ -49,11 +49,11 @@ class ConvertYouTube implements ShouldQueue
     $path_cookies=storage_path().'/cookies.txt';
 
     // Step 1: Get the video metadata (including title)
-    // Try with cookies first
+    // Try with cookies first (shorter timeout to fail fast)
     $metadataProcess = new Process([
-        'yt-dlp',"--cookies",$path_cookies, '--print', 'title', $this->youtubeLink
+        'yt-dlp',"--cookies",$path_cookies, '--socket-timeout', '30', '--print', 'title', $this->youtubeLink
     ]);
-    $metadataProcess->setTimeout(180); // Set timeout to 3 minutes for metadata
+    $metadataProcess->setTimeout(60); // Set shorter timeout for cookies attempt
     $metadataProcess->run();
 
     // If cookies method fails, try without cookies as fallback
@@ -64,9 +64,9 @@ class ConvertYouTube implements ShouldQueue
         ]);
 
         $metadataProcess = new Process([
-            'yt-dlp', '--print', 'title', $this->youtubeLink
+            'yt-dlp', '--socket-timeout', '30', '--print', 'title', $this->youtubeLink
         ]);
-        $metadataProcess->setTimeout(180);
+        $metadataProcess->setTimeout(90); // Moderate timeout for no-cookies attempt
         $metadataProcess->run();
 
         if (!$metadataProcess->isSuccessful()) {
