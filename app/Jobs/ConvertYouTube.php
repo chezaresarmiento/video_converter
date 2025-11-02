@@ -52,6 +52,7 @@ class ConvertYouTube implements ShouldQueue
     $metadataProcess = new Process([
         'yt-dlp',"--cookies",$path_cookies, '--print', 'title', $this->youtubeLink
     ]);
+    $metadataProcess->setTimeout(180); // Set timeout to 3 minutes for metadata
     $metadataProcess->run();
 
     if (!$metadataProcess->isSuccessful()) {
@@ -82,7 +83,7 @@ class ConvertYouTube implements ShouldQueue
 
     if($this->downloadFormat=='mp4'){
         $conversionProcess = new Process([
-            'yt-dlp', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
+            'yt-dlp',"--cookies",$path_cookies, '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
             '--postprocessor-args', '-c:v libx264 -c:a aac', // Ensure video is H.264 and audio is AAC (QuickTime-friendly)
             '--merge-output-format', 'mp4', // Merge into MP4 format
             '-o', $outputFile, // Output file location
