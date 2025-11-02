@@ -31,7 +31,7 @@ RUN docker-php-ext-configure gd \
     --with-jpeg \
     --with-webp
 
-RUN docker-php-ext-install -j$(nproc) gd
+RUN docker-php-ext-install -j4 gd
 
 SHELL ["/bin/bash", "-c"]
 
