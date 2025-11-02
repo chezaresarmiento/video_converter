@@ -12,6 +12,7 @@ use Symfony\Component\Process\Process;
 use Illuminate\Foundation\Bus\Dispatchable;
 use App\Models\Download;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Illuminate\Support\Facades\Log;
 
 
@@ -48,40 +49,62 @@ class ConvertYouTube implements ShouldQueue
    
     $path_cookies=storage_path().'/cookies.txt';
 
+    // Clean the YouTube URL to remove playlist parameters
+    $cleanUrl = $this->cleanYouTubeUrl($this->youtubeLink);
+
     // Step 1: Get the video metadata (including title)
-    // Try with cookies first (shorter timeout to fail fast)
-    $metadataProcess = new Process([
-        'yt-dlp',"--cookies",$path_cookies, '--socket-timeout', '30', '--print', 'title', $this->youtubeLink
-    ]);
-    $metadataProcess->setTimeout(60); // Set shorter timeout for cookies attempt
-    $metadataProcess->run();
+    $videoTitle = null;
 
-    // If cookies method fails, try without cookies as fallback
-    if (!$metadataProcess->isSuccessful()) {
-        Log::warning('yt-dlp with cookies failed, trying without cookies', [
-            'error' => $metadataProcess->getErrorOutput(),
-            'url' => $this->youtubeLink
-        ]);
-
+    try {
+        // Try with cookies first (shorter timeout to fail fast)
         $metadataProcess = new Process([
-            'yt-dlp', '--socket-timeout', '30', '--print', 'title', $this->youtubeLink
+            'yt-dlp',"--cookies",$path_cookies, '--no-playlist', '--socket-timeout', '30', '--print', 'title', $cleanUrl
         ]);
-        $metadataProcess->setTimeout(90); // Moderate timeout for no-cookies attempt
+        $metadataProcess->setTimeout(60); // Set shorter timeout for cookies attempt
         $metadataProcess->run();
 
-        if (!$metadataProcess->isSuccessful()) {
-            // If both methods fail, use a generic title based on video ID
-            $videoId = $this->extractVideoId($this->youtubeLink);
-            $videoTitle = 'youtube_video_' . $videoId;
-            Log::warning('Both cookie and no-cookie methods failed, using generic title', [
-                'url' => $this->youtubeLink,
-                'generic_title' => $videoTitle
-            ]);
-        } else {
+        if ($metadataProcess->isSuccessful()) {
             $videoTitle = trim($metadataProcess->getOutput());
         }
-    } else {
-        $videoTitle = trim($metadataProcess->getOutput());
+    } catch (ProcessTimedOutException $e) {
+        Log::warning('yt-dlp with cookies timed out', [
+            'timeout' => 60,
+            'url' => $cleanUrl
+        ]);
+    }
+
+    // If cookies method failed or timed out, try without cookies as fallback
+    if (empty($videoTitle)) {
+        try {
+            Log::warning('yt-dlp with cookies failed, trying without cookies', [
+                'url' => $cleanUrl
+            ]);
+
+            $metadataProcess = new Process([
+                'yt-dlp', '--no-playlist', '--socket-timeout', '30', '--print', 'title', $cleanUrl
+            ]);
+            $metadataProcess->setTimeout(90); // Moderate timeout for no-cookies attempt
+            $metadataProcess->run();
+
+            if ($metadataProcess->isSuccessful()) {
+                $videoTitle = trim($metadataProcess->getOutput());
+            }
+        } catch (ProcessTimedOutException $e) {
+            Log::warning('yt-dlp without cookies also timed out', [
+                'timeout' => 90,
+                'url' => $cleanUrl
+            ]);
+        }
+    }
+
+    // If both methods failed, use a generic title based on video ID
+    if (empty($videoTitle)) {
+        $videoId = $this->extractVideoId($cleanUrl);
+        $videoTitle = 'youtube_video_' . $videoId;
+        Log::warning('Both cookie and no-cookie methods failed, using generic title', [
+            'url' => $cleanUrl,
+            'generic_title' => $videoTitle
+        ]);
     }
 
     // videoTitle is already set in the logic above
@@ -103,15 +126,15 @@ class ConvertYouTube implements ShouldQueue
         // Step 3: Convert YouTube video to MP3
         if ($useCookies) {
             $conversionProcess = new Process([
-                "yt-dlp","--cookies",$path_cookies,"-x", '--audio-format', $this->downloadFormat,
+                "yt-dlp","--cookies",$path_cookies, '--no-playlist', "-x", '--audio-format', $this->downloadFormat,
                 '-o', $outputFile,
-                $this->youtubeLink
+                $cleanUrl
             ]);
         } else {
             $conversionProcess = new Process([
-                "yt-dlp","-x", '--audio-format', $this->downloadFormat,
+                "yt-dlp", '--no-playlist', "-x", '--audio-format', $this->downloadFormat,
                 '-o', $outputFile,
-                $this->youtubeLink
+                $cleanUrl
             ]);
         }
     }
@@ -119,19 +142,19 @@ class ConvertYouTube implements ShouldQueue
     if($this->downloadFormat=='mp4'){
         if ($useCookies) {
             $conversionProcess = new Process([
-                'yt-dlp',"--cookies",$path_cookies, '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
+                'yt-dlp',"--cookies",$path_cookies, '--no-playlist', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
                 '--postprocessor-args', '-c:v libx264 -c:a aac', // Ensure video is H.264 and audio is AAC (QuickTime-friendly)
                 '--merge-output-format', 'mp4', // Merge into MP4 format
                 '-o', $outputFile, // Output file location
-                $this->youtubeLink
+                $cleanUrl
             ]);
         } else {
             $conversionProcess = new Process([
-                'yt-dlp', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
+                'yt-dlp', '--no-playlist', '-f', 'bestvideo[ext=mp4]+bestaudio[ext=m4a]', // Best video in MP4 and best audio
                 '--postprocessor-args', '-c:v libx264 -c:a aac', // Ensure video is H.264 and audio is AAC (QuickTime-friendly)
                 '--merge-output-format', 'mp4', // Merge into MP4 format
                 '-o', $outputFile, // Output file location
-                $this->youtubeLink
+                $cleanUrl
             ]);
         }
     }
@@ -161,6 +184,19 @@ class ConvertYouTube implements ShouldQueue
         throw new \Exception('Conversion failed: ' . $conversionProcess->getErrorOutput());
     }
 }
+
+    /**
+     * Clean YouTube URL to remove playlist parameters
+     */
+    private function cleanYouTubeUrl($url)
+    {
+        // Remove playlist parameters that cause yt-dlp to fetch entire playlists
+        $cleanUrl = preg_replace('/[&?]list=[^&]*/', '', $url);
+        $cleanUrl = preg_replace('/[&?]start_radio=[^&]*/', '', $cleanUrl);
+        $cleanUrl = preg_replace('/[&?]index=[^&]*/', '', $cleanUrl);
+
+        return $cleanUrl;
+    }
 
     /**
      * Extract video ID from YouTube URL
