@@ -6,20 +6,32 @@ RUN apk update && apk upgrade
 # Install basic tools
 RUN apk add --no-cache vim
 
-# Install required packages
+# Install required packages for PHP extensions
 RUN apk add --no-cache \
     freetype-dev \
+    freetype \
     libjpeg-turbo-dev \
+    libjpeg-turbo \
     libpng-dev \
+    libpng \
     libzip-dev \
+    libzip \
     bzip2-dev \
+    bzip2 \
     oniguruma-dev \
+    oniguruma \
     bash \
-    supervisor
+    supervisor \
+    libwebp-dev \
+    libwebp
 
-# Configure and install GD extension
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install gd
+# Configure and install GD extension (PHP 8.2+ syntax)
+RUN docker-php-ext-configure gd \
+    --with-freetype \
+    --with-jpeg \
+    --with-webp
+
+RUN docker-php-ext-install -j$(nproc) gd
 
 SHELL ["/bin/bash", "-c"]
 
