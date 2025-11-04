@@ -135,23 +135,46 @@ const importCookies = async () => {
     try {
         const cookies = await getYoutubeCookies();
         if (!cookies) {
-            alert("No YouTube cookies found!");
+            alert("No YouTube cookies found! Please make sure you're logged into YouTube and try again.");
             return;
         }
+
+        // Show loading state
+        const originalText = event.target.textContent;
+        event.target.textContent = "Uploading cookies...";
+        event.target.disabled = true;
 
         // Send cookies to Laravel
         let response = await fetch('/api/upload-cookies', {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
             },
             body: JSON.stringify({ cookies }),
         });
 
         let result = await response.json();
-        alert(result.message);
+
+        if (response.ok) {
+            alert(`✅ ${result.message}\nFile size: ${result.file_size} bytes\nPath: ${result.path}`);
+        } else {
+            throw new Error(result.error || 'Unknown error occurred');
+        }
+
+        // Reset button
+        event.target.textContent = originalText;
+        event.target.disabled = false;
+
     } catch (error) {
         console.error("Error importing cookies:", error);
+        alert(`❌ Failed to upload cookies: ${error.message}\n\nPlease try:\n1. Make sure you're logged into YouTube\n2. Check your browser's cookie settings\n3. Try refreshing the page and logging into YouTube again`);
+
+        // Reset button
+        if (event.target) {
+            event.target.textContent = "Import YouTube Cookies";
+            event.target.disabled = false;
+        }
     }
 };
 
