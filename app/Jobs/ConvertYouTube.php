@@ -7,6 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Events\ConversionCompleted; // Use an event to notify when done
+use App\Events\ConversionFailed;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\Process\Process;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -45,7 +46,24 @@ class ConvertYouTube implements ShouldQueue
      * @return void
      */
     public function handle()
-{
+    {
+        try {
+            $this->processYouTubeDownload();
+        } catch (\Exception $e) {
+            Log::error('YouTube conversion failed', [
+                'url' => $this->youtubeLink,
+                'format' => $this->downloadFormat,
+                'user_id' => $this->userId,
+                'error' => $e->getMessage()
+            ]);
+
+            broadcast(new ConversionFailed($this->userId, $e->getMessage(), $this->youtubeLink));
+            throw $e; // Re-throw to mark job as failed
+        }
+    }
+
+    private function processYouTubeDownload()
+    {
    
     $path_cookies=storage_path().'/cookies.txt';
 
@@ -164,6 +182,7 @@ class ConvertYouTube implements ShouldQueue
     $conversionProcess->run();
 
     if (!$conversionProcess->isSuccessful()) {
+        $errorMessage = 'Video conversion failed: ' . $conversionProcess->getErrorOutput();
         throw new ProcessFailedException($conversionProcess);
     }
     // Store download information in the database
@@ -180,8 +199,6 @@ class ConvertYouTube implements ShouldQueue
             'file_path' => $url,
             'file_format' => $this->downloadFormat,
         ]);
-    } else {
-        throw new \Exception('Conversion failed: ' . $conversionProcess->getErrorOutput());
     }
 }
 

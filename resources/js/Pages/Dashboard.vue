@@ -84,8 +84,16 @@ function download() {
   url_download.value = '' // Reset the download link before the new request
 
   // Set the form data for the YouTube link and format
-  form.youtubeLink = youtubeLink.value 
+  form.youtubeLink = youtubeLink.value
   form.downloadFormat = downloadFormat.value
+
+  // Safety timeout in case no event is received (10 minutes)
+  setTimeout(() => {
+    if (loader.value) {
+      loader.value = false
+      alert('Download is taking longer than expected. Please check your downloads list or try again.')
+    }
+  }, 600000) // 10 minutes
 
   // Post the form to the /videos/download endpoint but do NOT navigate
   // fetch('/videos/download', {
@@ -178,6 +186,11 @@ onMounted(() => {
             loader.value = false
             url_download.value = e.url
             window.location.reload()
+        })
+        .listen('ConversionFailed', (e) => {
+            console.error('Conversion failed:', e.error);
+            loader.value = false
+            alert('Download failed: ' + e.error);
         });
     
 });
